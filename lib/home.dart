@@ -23,12 +23,6 @@ class _HomeState extends State<Home> {
 
     var arquivo = await _getFile();
 
-    Map<String, dynamic> tarefa = Map();
-
-    tarefa['titulo'] = _novoItemController.text;
-    tarefa['concluido'] = false;
-    tarefas.add(tarefa);
-
     String dados = json.encode(tarefas);
     arquivo.writeAsString(dados);
   }
@@ -43,6 +37,22 @@ class _HomeState extends State<Home> {
     } catch (e) {
       return null;
     }
+
+  }
+
+  _salvarTarefa() {
+
+    Map<String, dynamic> tarefa = Map();
+
+    tarefa['titulo'] = _novoItemController.text;
+    tarefa['concluido'] = false;
+
+    setState(() {
+      tarefas.add(tarefa);
+    });
+
+    _novoItemController.text = "";
+    _salvarArquivo();
 
   }
 
@@ -95,7 +105,7 @@ class _HomeState extends State<Home> {
                     color: Colors.purple,
                     child: Text("Adicionar", style: TextStyle(color: Colors.white)),
                     onPressed: () {
-                      _salvarArquivo();
+                      _salvarTarefa();
                       Navigator.pop(context);
                     },
                   )
@@ -118,8 +128,18 @@ class _HomeState extends State<Home> {
                 itemCount: tarefas.length,
                 itemBuilder: (context, index) {
 
-                  return ListTile(
-                    title: Text( tarefas[index]['titulo'] )
+                  return CheckboxListTile(
+                    checkColor: Colors.white,
+                    activeColor: Colors.purple,
+                    value: tarefas[index]['concluido'],
+                    title: Text( tarefas[index]['titulo'] ),
+                    onChanged: (valorAlterado) {
+                      setState(() {
+                        tarefas[index]['concluido'] = valorAlterado;
+                      });
+
+                      _salvarArquivo();
+                    },
                   );
 
                 },
