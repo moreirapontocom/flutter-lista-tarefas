@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'dart:convert';
 
 class Home extends StatefulWidget {
   @override
@@ -7,34 +10,62 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
-  List<String> tarefas = [];
+  List tarefas = [];
 
-  bool _valor = false;
   TextEditingController _novoItemController = TextEditingController();
 
-  void _listaTarefas() {
-
-    if (tarefas.length==0) {
-      for (int i=0;i<5;i++) {
-        tarefas.add('Tarefa ' + i.toString());
-      }
-    }
+  Future<File> _getFile() async {
+    final diretorio = await getApplicationDocumentsDirectory();
+    return File( diretorio.path + "/dados.json" );
   }
 
-  void _pusha() {
-    print("Push: " + _novoItemController.text);
+  _salvarArquivo() async {
 
-    setState(() {
-      tarefas.add( _novoItemController.text );
+    var arquivo = await _getFile();
+
+    Map<String, dynamic> tarefa = Map();
+
+    tarefa['titulo'] = _novoItemController.text;
+    tarefa['concluido'] = false;
+    tarefas.add(tarefa);
+
+    String dados = json.encode(tarefas);
+    arquivo.writeAsString(dados);
+  }
+
+  _lerArquivo() async {
+
+    try {
+      
+      var arquivo = await _getFile();
+      return arquivo.readAsString();
+
+    } catch (e) {
+      return null;
+    }
+
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _lerArquivo().then((dados) {
+      setState(() {
+        tarefas = json.decode(dados);
+      });
     });
 
-    print("Length: " + tarefas.length.toString());
+    // Não dá pra usar da forma abaixo pois o await só pode ser utilizado dentro de uma função async que retorne algum Future<>
+    // Aqui é o initState, não pode esperar
+    // var itens = await _lerArquivo();
   }
 
   @override
   Widget build(BuildContext context) {
 
-    _listaTarefas();
+    // _salvarArquivo();
+    print(tarefas.toString());
 
     return Scaffold(
       appBar: AppBar(
@@ -64,7 +95,7 @@ class _HomeState extends State<Home> {
                     color: Colors.purple,
                     child: Text("Adicionar", style: TextStyle(color: Colors.white)),
                     onPressed: () {
-                      _pusha();
+                      _salvarArquivo();
                       Navigator.pop(context);
                     },
                   )
@@ -88,16 +119,7 @@ class _HomeState extends State<Home> {
                 itemBuilder: (context, index) {
 
                   return ListTile(
-                    title: Text( tarefas[index] ),
-                    trailing: Checkbox(
-                      value: _valor,
-                      onChanged: (bool value) {
-                        print("Checkbox ID " + index.toString() + ". VALUE: " + value.toString());
-                        setState(() {
-                          _valor = value;
-                        });
-                      },
-                    ),
+                    title: Text( tarefas[index]['titulo'] )
                   );
 
                 },
