@@ -128,24 +128,50 @@ class _HomeState extends State<Home> {
                 itemCount: tarefas.length,
                 itemBuilder: (context, index) {
 
-                  // Sem esta linha, está gerando erro no Dismissible() após ser removido
-                  final item = tarefas[index].toString();
-
                   return Dismissible(
-                    key: Key(item),
-                    direction: DismissDirection.horizontal,
+                    // Não pode usar esta linha pois ao desfazer a exclusão, o item volta com a mesma key (tarefas[index].toString())
+                    // Os keys nunca podem se repetir, mesmo que tenha sido removido
+                    // key: Key(tarefas[index].toString()),
+                    key: Key( DateTime.now().millisecondsSinceEpoch.toString() ),
+                    direction: DismissDirection.endToStart,
                     onDismissed: (direcao) {
                       print("Direção: " + direcao.toString());
 
-                      setState(() {
-                        tarefas.removeAt(index);
-                      });
+                      final itemRemovido = tarefas[index];
+                      final indexRemovido = index;
+
+                      tarefas.removeAt(index);
+                      _salvarArquivo();
+
+                      // Snackbar
+                      final snackBar = SnackBar(
+                        duration: Duration(seconds: 5),
+                        content: Text("Item removido"),
+                        action: SnackBarAction(
+                          label: "Desfazer",
+                          textColor: Colors.yellow,
+                          onPressed: () {
+
+                            setState(() {
+                              tarefas.insert(indexRemovido, itemRemovido);
+                            });
+                            _salvarArquivo();
+
+                          },
+                        ),
+                      );
+
+                      Scaffold.of(context).showSnackBar(snackBar);
+                      // fim Snackbar
                     },
+                    /*
                     background: Container(
                       color: Colors.green,
                       child: Icon(Icons.check, color: Colors.white,)
                     ),
-                    secondaryBackground: Container(
+                    */
+                    // secondaryBackground: Container(
+                    background: Container(
                       padding: EdgeInsets.all(16),
                       color: Colors.red,
                       child: Row(
