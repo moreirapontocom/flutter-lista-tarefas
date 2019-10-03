@@ -128,18 +128,46 @@ class _HomeState extends State<Home> {
                 itemCount: tarefas.length,
                 itemBuilder: (context, index) {
 
-                  return CheckboxListTile(
-                    checkColor: Colors.white,
-                    activeColor: Colors.purple,
-                    value: tarefas[index]['concluido'],
-                    title: Text( tarefas[index]['titulo'] ),
-                    onChanged: (valorAlterado) {
-                      setState(() {
-                        tarefas[index]['concluido'] = valorAlterado;
-                      });
+                  // Sem esta linha, está gerando erro no Dismissible() após ser removido
+                  final item = tarefas[index].toString();
 
-                      _salvarArquivo();
+                  return Dismissible(
+                    key: Key(item),
+                    direction: DismissDirection.horizontal,
+                    onDismissed: (direcao) {
+                      print("Direção: " + direcao.toString());
+
+                      setState(() {
+                        tarefas.removeAt(index);
+                      });
                     },
+                    background: Container(
+                      color: Colors.green,
+                      child: Icon(Icons.check, color: Colors.white,)
+                    ),
+                    secondaryBackground: Container(
+                      padding: EdgeInsets.all(16),
+                      color: Colors.red,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: <Widget>[
+                          Icon(Icons.clear, color: Colors.white,)
+                        ],
+                      ),
+                    ),
+                    child: CheckboxListTile(
+                      checkColor: Colors.white,
+                      activeColor: Colors.purple,
+                      value: tarefas[index]['concluido'],
+                      title: Text( tarefas[index]['titulo'] ),
+                      onChanged: (valorAlterado) {
+                        setState(() {
+                          tarefas[index]['concluido'] = valorAlterado;
+                        });
+
+                        _salvarArquivo();
+                      },
+                    ),
                   );
 
                 },
